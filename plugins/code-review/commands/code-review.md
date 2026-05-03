@@ -6,7 +6,7 @@ description: Code review a pull request
 Provide a code review for the given pull request.
 
 **Agent assumptions (applies to all agents and subagents):**
-- All tools are functional and will work without error. Do not test tools or make exploratory calls.
+- All tools are functional and will work without error. Do not test tools or make exploratory calls. Make sure this is clear to every subagent that is launched.
 - Only call a tool if it is required to complete the task. Every tool call should have a clear purpose.
 
 To do this, follow these steps precisely:
@@ -56,15 +56,23 @@ Note: Still review Claude generated PR's.
 
 6. Filter out any issues that were not validated in step 5. This step will give us our list of high signal issues for our review.
 
-7. If issues were found, skip to step 8 to post inline comments directly.
+7. Output a summary of the review findings to the terminal:
+   - If issues were found, list each issue with a brief description.
+   - If no issues were found, state: "No issues found. Checked for bugs and CLAUDE.md compliance."
 
-   If NO issues were found, post a summary comment using `gh pr comment` (if `--comment` argument is provided):
-   "No issues found. Checked for bugs and CLAUDE.md compliance."
+   If `--comment` argument was NOT provided, stop here. Do not post any GitHub comments.
 
-8. Post inline comments for each issue using `mcp__github_inline_comment__create_inline_comment`. For each comment:
+   If `--comment` argument IS provided and NO issues were found, post a summary comment using `gh pr comment` and stop.
+
+   If `--comment` argument IS provided and issues were found, continue to step 8.
+
+8. Create a list of all comments that you plan on leaving. This is only for you to make sure you are comfortable with the comments. Do not post this list anywhere.
+
+9. Post inline comments for each issue using `mcp__github_inline_comment__create_inline_comment` with `confirmed: true`. For each comment:
    - Provide a brief description of the issue
    - For small, self-contained fixes, include a committable suggestion block
    - For larger fixes (6+ lines, structural changes, or changes spanning multiple locations), describe the issue and suggested fix without a suggestion block
+   - Never post a committable suggestion UNLESS committing the suggestion fixes the issue entirely. If follow up steps are required, do not leave a committable suggestion.
 
    **IMPORTANT: Only post ONE comment per unique issue. Do not post duplicate comments.**
 
@@ -82,7 +90,7 @@ Notes:
 - Use gh CLI to interact with GitHub (e.g., fetch pull requests, create comments). Do not use web fetch.
 - Create a todo list before starting.
 - You must cite and link each issue in inline comments (e.g., if referring to a CLAUDE.md, include a link to it).
-- If no issues are found, post a comment with the following format:
+- If no issues are found and `--comment` argument is provided, post a comment with the following format:
 
 ---
 
